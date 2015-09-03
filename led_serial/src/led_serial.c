@@ -215,29 +215,20 @@ TASK(SerialEchoTask)
       {
 
          /* si se envio un numero de 1 al 6 */
-         if(ret >= 0x31 && ret <= 0x36) {
+         if(buf[0] >= 49 && buf[0] <= 54) {
             /* le restamos 31 */
-            aux = ret - 0x30;
+            aux = buf[0] - 49;
 
             /* leo el estado de los leds y prendo o apago el led pedido */
             ciaaPOSIX_read(fd_out, &outputs, 1);
             outputs ^= (1 << aux);
             ciaaPOSIX_write(fd_out, &outputs, 1);
+
+            /* ... and write them to the same device */
+            ciaaPOSIX_write(fd_uart1, buf, ret);   
          }
 
-         /* ... and write them to the same device */
-         ciaaPOSIX_write(fd_uart1, buf, ret);   
-         /* ... and write them to the same device */
-         ciaaPOSIX_write(fd_uart1, buf, aux);
-
       }
-
-/*
-      //blink output 5 with each loop
-      ciaaPOSIX_read(fd_out, &outputs, 1);
-      outputs ^= 0x20;
-      ciaaPOSIX_write(fd_out, &outputs, 1);
-*/
    }
 }
 
@@ -272,7 +263,7 @@ TASK(PeriodicTask)
    outputs ^= 0x10;
 
    /* write */
-   ciaaPOSIX_write(fd_out, &outputs, 1);
+   //ciaaPOSIX_write(fd_out, &outputs, 1);
 
    /* Print Task info */
    Periodic_Task_Counter++;
