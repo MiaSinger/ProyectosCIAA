@@ -80,12 +80,6 @@
 /*==================[internal functions declaration]=========================*/
 
 /*==================[internal data definition]===============================*/
-/** \brief File descriptor for digital input ports
- *
- * Device path /dev/dio/in/0
- */
-static int32_t fd_in;
-
 /** \brief File descriptor for digital output ports
  *
  * Device path /dev/dio/out/0
@@ -163,9 +157,7 @@ TASK(InitTask)
    ciaak_start();
 
    ciaaPOSIX_printf("Init Task...\n");
-   /* open CIAA digital inputs */
-   fd_in = ciaaPOSIX_open("/dev/dio/in/0", ciaaPOSIX_O_RDONLY);
-
+  
    /* open CIAA digital outputs */
    fd_out = ciaaPOSIX_open("/dev/dio/out/0", ciaaPOSIX_O_RDWR);
 
@@ -177,10 +169,6 @@ TASK(InitTask)
 
    /* change FIFO TRIGGER LEVEL for uart usb */
    ciaaPOSIX_ioctl(fd_uart1, ciaaPOSIX_IOCTL_SET_FIFO_TRIGGER_LEVEL, (void *)ciaaFIFO_TRIGGER_LEVEL3);
-
-   /* activate example tasks */
-   Periodic_Task_Counter = 0;
-   SetRelAlarm(ActivatePeriodicTask, 200, 200);
 
    /* Activates the SerialEchoTask task */
    ActivateTask(SerialEchoTask);
@@ -232,49 +220,7 @@ TASK(SerialEchoTask)
    }
 }
 
-/** \brief Periodic Task
- *
- * This task is activated by the Alarm ActivatePeriodicTask.
- * This task copies the status of the inputs bits 0..3 to the output bits 0..3.
- * This task also blinks the output 4
- */
-TASK(PeriodicTask)
-{
-   /*
-    * Example:
-    *    Read inputs 0..3, update outputs 0..3.
-    *    Blink output 4
-    */
-
-   /* variables to store input/output status */
-   uint8_t inputs = 0, outputs = 0;
-
-   /* read inputs */
-   ciaaPOSIX_read(fd_in, &inputs, 1);
-
-   /* read outputs */
-   ciaaPOSIX_read(fd_out, &outputs, 1);
-
-   /* update outputs with inputs */
-   outputs &= 0xF0;
-   outputs |= inputs & 0x0F;
-
-   /* blink */
-   outputs ^= 0x10;
-
-   /* write */
-   //ciaaPOSIX_write(fd_out, &outputs, 1);
-
-   /* Print Task info */
-   Periodic_Task_Counter++;
-   ciaaPOSIX_printf("Periodic Task: %d\n", Periodic_Task_Counter);
-
-   /* end PeriodicTask */
-   TerminateTask();
-}
-
 /** @} doxygen end group definition */
 /** @} doxygen end group definition */
 /** @} doxygen end group definition */
 /*==================[end of file]============================================*/
-
