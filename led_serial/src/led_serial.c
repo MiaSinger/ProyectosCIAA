@@ -191,7 +191,7 @@ TASK(SerialEchoTask)
    int32_t aux;      /* aux */
 
    /* send a message to the world :) */
-   char message[] = "Hola! :)\nPrende y apaga los leds enviando numeros del 0 al 5!\n";
+   char message[] = "Hola! :)\nPrende y apaga los leds enviando numeros del 0 al 5!, Con un 'S' prendera todos los LEDS y con 'C' los apagara\n";
    ciaaPOSIX_write(fd_uart1, message, ciaaPOSIX_strlen(message));
 
    while(1)
