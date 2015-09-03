@@ -80,6 +80,12 @@
 /*==================[internal functions declaration]=========================*/
 
 /*==================[internal data definition]===============================*/
+/** \brief File descriptor for digital input ports
+ *
+ * Device path /dev/dio/in/0
+ */
+static int32_t fd_in;
+
 /** \brief File descriptor for digital output ports
  *
  * Device path /dev/dio/out/0
@@ -157,6 +163,9 @@ TASK(InitTask)
    ciaak_start();
 
    ciaaPOSIX_printf("Init Task...\n");
+
+   /* open CIAA digital inputs */
+   fd_in = ciaaPOSIX_open("/dev/dio/in/0", ciaaPOSIX_O_RDONLY);
   
    /* open CIAA digital outputs */
    fd_out = ciaaPOSIX_open("/dev/dio/out/0", ciaaPOSIX_O_RDWR);
@@ -172,6 +181,9 @@ TASK(InitTask)
 
    /* Activates the SerialEchoTask task */
    ActivateTask(SerialEchoTask);
+
+   /* activate periodic task alarm */
+   SetRelAlarm(ActivatePeriodicTask, 200, 20);
 
    /* end InitTask */
    TerminateTask();
@@ -231,6 +243,37 @@ TASK(SerialEchoTask)
       }
    }
 }
+
+
+/** \brief Periodic Task
+ *
+ * This task is activated by the Alarm ActivatePeriodicTask.
+ */
+TASK(PeriodicTask)
+{
+   /* variables to store input/output status */
+   uint8_t inputs = 0, outputs = 0;
+
+   /* read inputs */
+   ciaaPOSIX_read(fd_in, &inputs, 1);
+
+   /* read outputs */
+   ciaaPOSIX_read(fd_out, &outputs, 1);
+
+   /* depende del boton que se apreta se preden o apagan todos los leds */
+   if(inputs == 0b01) {
+      outputs = 0x3F;
+   } else if(inputs == 0b10) {
+      outputs = 0x00;
+   }
+   
+   /* write */
+   ciaaPOSIX_write(fd_out, &outputs, 1);
+
+   /* end PeriodicTask */
+   TerminateTask();
+}
+
 
 /** @} doxygen end group definition */
 /** @} doxygen end group definition */
