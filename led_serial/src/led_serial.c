@@ -196,26 +196,38 @@ TASK(SerialEchoTask)
 
    while(1)
    {
-      /* wait for any character ... */
+      //Espero a que me llegue algo por UART
       ret = ciaaPOSIX_read(fd_uart1, buf, 20); 
 
+      //Si todo salio bien
       if(ret > 0)
       {
+         //Leo el estado de las salidas digitales
+         ciaaPOSIX_read(fd_out, &outputs, 1);
 
-         /* si se envio un numero de 1 al 6 */
-         if(buf[0] >= 49 && buf[0] <= 54) {
-            /* le restamos 31 */
-            aux = buf[0] - 49;
+         //Si se envio un numero de 1 al 6
+         if(buf[0] >= 49 && buf[0] <= 54 || buf[0] == 115 || buf[0] == 99) {
 
-            /* leo el estado de los leds y prendo o apago el led pedido */
-            ciaaPOSIX_read(fd_out, &outputs, 1);
-            outputs ^= (1 << aux);
-            ciaaPOSIX_write(fd_out, &outputs, 1);
+            if(buf[0] == 99) {
+               //Si se mando una 'c' apago todo
+               outputs = 0x00;
+            } else if(buf[0] == 115) {
+               //Si se mando una 's' prendo todo
+               outputs = 0x3F;
+            } else {
+               //Si se mando un número del 1 al 6, prendo o apago el led correspondiente
 
-            /* ... and write them to the same device */
-            ciaaPOSIX_write(fd_uart1, buf, ret);   
+               //Le restamos 49 para ver que numero mandaron 
+               aux = buf[0] - 49;
+
+               //Leo el estado de los leds y prendo o apago el led pedido 
+               outputs ^= (1 << aux);
+            }
+               //Pongo los outputs en los leds
+               ciaaPOSIX_write(fd_out, &outputs, 1);
+               //Y escribo en la uart lo recibido
+               ciaaPOSIX_write(fd_uart1, buf, ret);   
          }
-
       }
    }
 }
