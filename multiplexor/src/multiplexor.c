@@ -92,7 +92,7 @@ uint8_t value = 0;
 
 /*==================[internal functions definition]==========================*/
 
-void configurar_salidas(void);
+void configurar_salida(uint8_t pinNamePort,uint8_t pinNamePin,uint8_t func,uint8_t gpioPort,uint8_t gpioPin);
 
 /*==================[external functions definition]==========================*/
 /** \brief Main function
@@ -154,7 +154,10 @@ TASK(InitTask)
 
    fd_out = ciaaPOSIX_open("/dev/dio/out/0", ciaaPOSIX_O_RDWR);
 
-   configurar_salidas();
+   //GPIO8
+   configurar_salida(6,12,FUNC0,2,8);
+   //GPIO7
+   configurar_salida(6,11,FUNC0,3,7);
 
    /* activate periodic task:
     *  - for the first time after 350 ticks (350 ms)
@@ -180,9 +183,17 @@ TASK(PeriodicTask)
    
    if(value == 1) {
         Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+        gpioPort    = 3;
+        gpioPin     = 7;
+        Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+
         value = 0;
    } else {
         Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+        gpioPort    = 3;
+        gpioPin     = 7;
+        Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+
         value = 1;
    }
 
@@ -190,17 +201,7 @@ TASK(PeriodicTask)
    TerminateTask();
 }
 
-void configurar_salidas(void) {
-  //Configurar el pin GPIO8 (P6_12)
-  //La FUNC0 de GPIO8 es GPIO2[8]
-
-    //Definicion de datos
-     uint8_t pinNamePort = 6;
-     uint8_t pinNamePin  = 12;
-     uint8_t func        = FUNC0;
-     uint8_t gpioPort    = 2;
-     uint8_t gpioPin     = 8;
-
+void configurar_salida(uint8_t pinNamePort,uint8_t pinNamePin,uint8_t func,uint8_t gpioPort,uint8_t gpioPin) {
     //Configuración como OUTPUT:
      Chip_SCU_PinMux(
         pinNamePort,
@@ -212,11 +213,9 @@ void configurar_salidas(void) {
      uint8_t OUTPUT = 1;
 
      Chip_GPIO_SetDir(LPC_GPIO_PORT, gpioPort, ( 1 << gpioPin ), OUTPUT);
-
-     // Escribir 
-     gpioPort    = 2;
-     gpioPin     = 8;
-     uint8_t value     = 0;
+     
+     //Inicializo en 0
+     uint8_t value = 0;
 
      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, value);
 } 
