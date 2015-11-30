@@ -1,7 +1,7 @@
 /* Copyright 2014, Mariano Cerdeiro
- * Copyright 2014, Gustavo Muro
  * Copyright 2014, Pablo Ridolfi
  * Copyright 2014, Juan Cecconi
+ * Copyright 2014, Gustavo Muro
  *
  * This file is part of CIAA Firmware.
  *
@@ -33,9 +33,9 @@
  *
  */
 
-/** \brief Blinking Modbus example source file
+/** \brief Blinking_echo example source file
  **
- ** This is a mini example of the CIAA Firmware
+ ** This is a mini example of the CIAA Firmware.
  **
  **/
 
@@ -43,31 +43,42 @@
  ** @{ */
 /** \addtogroup Examples CIAA Firmware Examples
  ** @{ */
-/** \addtogroup ADC DAC ADC & DAC example source file
+/** \addtogroup Blinking Blinking_echo example source file
  ** @{ */
 
 /*
  * Initials     Name
  * ---------------------------
  * MaCe         Mariano Cerdeiro
- * GMuro        Gustavo Muro
  * PR           Pablo Ridolfi
  * JuCe         Juan Cecconi
- *
+ * GMuro        Gustavo Muro
+ * ErPe         Eric Pernia
  */
 
 /*
  * modification history (new versions first)
  * -----------------------------------------------------------
- * 20140805 v0.0.1   GMuro first functional version
+ * 20150603 v0.0.3   ErPe change uint8 type by uint8_t
+ *                        in line 172
+ * 20141019 v0.0.2   JuCe add printf in each task,
+ *                        remove trailing spaces
+ * 20140731 v0.0.1   PR   first functional version
  */
 
 /*==================[inclusions]=============================================*/
-#include "os.h"
-#include "ciaaPOSIX_stdio.h"
-#include "ciaaPOSIX_stdlib.h"
+
+/* Si ponemos esto a lo ultimo se rompe WTF! */
+#include "chip.h"
+
+#include "os.h"               /* <= operating system header */
+#include "ciaaPOSIX_stdio.h"  /* <= device handler header */
+#include "ciaaPOSIX_string.h" /* <= string header */
 #include "ciaak.h"            /* <= ciaa kernel header */
-#include "adc_serial.h"
+#include "encoder.h"          /* <= own header */
+
+static int32_t fd_out;
+uint8_t value = 0;
 
 /*==================[macros and definitions]=================================*/
 
@@ -77,27 +88,11 @@
 
 /*==================[internal data definition]===============================*/
 
-/** \brief File descriptor for ADC
- *
- * Device path /dev/serial/aio/in/0
- */
-static int32_t fd_adc;
-
-/** \brief File descriptor for digital output ports
- *
- * Device path /dev/dio/out/0
- */
-static int32_t fd_out;
-
-/** \brief File descriptor of the USB uart
- *
- * Device path /dev/serial/uart/1
- */
-static int32_t fd_uart;
-
 /*==================[external data definition]===============================*/
 
 /*==================[internal functions definition]==========================*/
+
+void configurar_salida(uint8_t pinNamePort,uint8_t pinNamePin,uint8_t func,uint8_t gpioPort,uint8_t gpioPin);
 
 /*==================[external functions definition]==========================*/
 /** \brief Main function
@@ -151,68 +146,85 @@ void ErrorHook(void)
  */
 TASK(InitTask)
 {
-   /* init the ciaa kernel */
+   /* init CIAA kernel and devices */
    ciaak_start();
 
-   /* open CIAA ADC */
-   fd_adc = ciaaPOSIX_open("/dev/serial/aio/in/0", ciaaPOSIX_O_RDONLY);
-   ciaaPOSIX_ioctl(fd_adc, ciaaPOSIX_IOCTL_SET_SAMPLE_RATE, 100000);
-   ciaaPOSIX_ioctl(fd_adc, ciaaPOSIX_IOCTL_SET_CHANNEL, ciaaCHANNEL_3);
+   /* print message (only on x86) */
+   ciaaPOSIX_printf("Init Task...\n");
 
-   /* open CIAA digital outputs */
    fd_out = ciaaPOSIX_open("/dev/dio/out/0", ciaaPOSIX_O_RDWR);
 
-   /* open UART connected to USB bridge (FT2232) */
-   fd_uart = ciaaPOSIX_open("/dev/serial/uart/1", ciaaPOSIX_O_RDWR);
+   //GPIO8
+   configurar_salida(6,12,FUNC0,2,8);
+   //GPIO7
+   configurar_salida(6,11,FUNC0,3,7);
 
-   /* change baud rate for uart usb */
-   ciaaPOSIX_ioctl(fd_uart, ciaaPOSIX_IOCTL_SET_BAUDRATE, (void *)ciaaBAUDRATE_115200);
+   /* activate periodic task:
+    *  - for the first time after 350 ticks (350 ms)
+    *  - and then every 250 ticks (250 ms)
+    */
+   SetRelAlarm(ActivatePeriodicTask, 0, 500);
 
-   /* change FIFO TRIGGER LEVEL for uart usb */
-   ciaaPOSIX_ioctl(fd_uart, ciaaPOSIX_IOCTL_SET_FIFO_TRIGGER_LEVEL, (void *)ciaaFIFO_TRIGGER_LEVEL2);
-
-   /* Activates the ModbusSlave task */
-   ActivateTask(Analogic);
-
-   /* end InitTask */
+   /* terminate task */
    TerminateTask();
 }
 
-TASK(Analogic)
+/** \brief Periodic Task
+ *
+ * This task is started automatically every time that the alarm
+ * ActivatePeriodicTask expires.
+ *
+ */
+TASK(PeriodicTask)
 {
-   /* 
-      ADC!
-   */
-   uint16_t adc_data;
+   //Leer el estado, y cambiarlo
+   uint8_t gpioPort;
+   uint8_t gpioPin; 
 
-   /* Read ADC. */
-   ciaaPOSIX_read(fd_adc, &adc_data, sizeof(adc_data));
+   if(value == 0) {
+     gpioPort = 2;
+     gpioPin = 8; 
+     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+     value = 1;
+   } else if (value == 1) {
+     gpioPort = 3;
+     gpioPin = 7; 
+     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+     value = 2;
+   } else if (value == 2) {
+     gpioPort = 2;
+     gpioPin = 8; 
+     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+     value = 3;
+   } else if (value == 3) {
+     gpioPort = 3;
+     gpioPin = 7; 
+     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+     value = 0;
+   }
 
-   /* Signal gain. */
-   adc_data >>= 0;
-
-   /* 
-      SERIAL!
-   */
-   char message[] = "Hi! :)\nSerialEchoTask: Waiting for characters...\n";
-   ciaaPOSIX_write(fd_uartfootp, message, ciaaPOSIX_strlen(message));
-
-   /* 
-      BLINKING!
-   */
-   uint8_t outputs;  /* to store outputs status                */
-
-   /* write blinking message */
-   ciaaPOSIX_printf("Blinking\n");
-
-   /* blink output */
-   ciaaPOSIX_read(fd_out, &outputs, 1);
-   outputs ^= 0x20;
-   ciaaPOSIX_write(fd_out, &outputs, 1);
-
-   /* end of Task */
+   /* terminate task */
    TerminateTask();
 }
+
+void configurar_salida(uint8_t pinNamePort,uint8_t pinNamePin,uint8_t func,uint8_t gpioPort,uint8_t gpioPin) {
+    //Configuración como OUTPUT:
+     Chip_SCU_PinMux(
+        pinNamePort,
+        pinNamePin,
+        SCU_MODE_INACT | SCU_MODE_ZIF_DIS,
+        func
+     );
+
+     uint8_t OUTPUT = 1;
+
+     Chip_GPIO_SetDir(LPC_GPIO_PORT, gpioPort, ( 1 << gpioPin ), OUTPUT);
+     
+     //Inicializo en 0
+     uint8_t init = 0;
+
+     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, init);
+} 
 
 /** @} doxygen end group definition */
 /** @} doxygen end group definition */

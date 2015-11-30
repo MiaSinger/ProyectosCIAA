@@ -75,7 +75,7 @@
 #include "ciaaPOSIX_stdio.h"  /* <= device handler header */
 #include "ciaaPOSIX_string.h" /* <= string header */
 #include "ciaak.h"            /* <= ciaa kernel header */
-#include "multiplexor.h"             /* <= own header */
+#include "multiplexor.h"      /* <= own header */
 
 static int32_t fd_out;
 uint8_t value = 0;
@@ -158,6 +158,8 @@ TASK(InitTask)
    configurar_salida(6,12,FUNC0,2,8);
    //GPIO7
    configurar_salida(6,11,FUNC0,3,7);
+   //GPIO5
+   configurar_salida(6,9,FUNC0,3,5);
 
    /* activate periodic task:
     *  - for the first time after 350 ticks (350 ms)
@@ -178,23 +180,124 @@ TASK(InitTask)
 TASK(PeriodicTask)
 {
    //Leer el estado, y cambiarlo
-   uint8_t gpioPort    = 2;
-   uint8_t gpioPin     = 8;
-   
+   uint8_t gpioPort;
+   uint8_t gpioPin;
+
+   //2-8 (Menos significativo)
+   //3-7
+   //3-5 (Mas significativo)
+
+   //Cambio las salidas segun en valor en "value"
+
+   // switch(value) {
+   //    case 0:
+   //      gpioPort    = 2;
+   //      gpioPin     = 8;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      gpioPort    = 3;
+   //      gpioPin     = 7;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      gpioPort    = 3;
+   //      gpioPin     = 5;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      break;
+   //    case 1:
+   //      gpioPort    = 2;
+   //      gpioPin     = 8;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      gpioPort    = 3;
+   //      gpioPin     = 7;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      gpioPort    = 3;
+   //      gpioPin     = 5;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      break;
+   //    case 2:
+   //      gpioPort    = 2;
+   //      gpioPin     = 8;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      gpioPort    = 3;
+   //      gpioPin     = 7;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      gpioPort    = 3;
+   //      gpioPin     = 5;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      break;
+   //    case 3:
+   //      gpioPort    = 2;
+   //      gpioPin     = 8;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      gpioPort    = 3;
+   //      gpioPin     = 7;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      gpioPort    = 3;
+   //      gpioPin     = 5;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      break;
+   //    case 4:
+   //      gpioPort    = 2;
+   //      gpioPin     = 8;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      gpioPort    = 3;
+   //      gpioPin     = 7;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      gpioPort    = 3;
+   //      gpioPin     = 5;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      break;
+   //    case 5:
+   //      gpioPort    = 2;
+   //      gpioPin     = 8;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      gpioPort    = 3;
+   //      gpioPin     = 7;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      gpioPort    = 3;
+   //      gpioPin     = 5;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      break;
+   //    case 6:
+   //      gpioPort    = 2;
+   //      gpioPin     = 8;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+   //      gpioPort    = 3;
+   //      gpioPin     = 7;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      gpioPort    = 3;
+   //      gpioPin     = 5;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      break;
+   //    case 7:
+   //      gpioPort    = 2;
+   //      gpioPin     = 8;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      gpioPort    = 3;
+   //      gpioPin     = 7;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      gpioPort    = 3;
+   //      gpioPin     = 5;
+   //      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+   //      break;
+   // }
+
+   // value = (++value) % 8;
+
    if(value == 1) {
-        Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
-        gpioPort    = 3;
-        gpioPin     = 7;
-        Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
-
-        value = 0;
-   } else {
-        Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
-        gpioPort    = 3;
-        gpioPin     = 7;
-        Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
-
-        value = 1;
+     gpioPort    = 2;
+     gpioPin     = 8;
+     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+     gpioPort    = 3;
+     gpioPin     = 7;
+     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+     value = 0;
+   } else if (value == 0) {
+     gpioPort    = 2;
+     gpioPin     = 8;
+     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+     gpioPort    = 3;
+     gpioPin     = 7;
+     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+     value = 1;
    }
 
    /* terminate task */
