@@ -195,7 +195,7 @@ TASK(Analogic)
       SERIAL!
    */
    char message[] = "Hi! :)\nSerialEchoTask: Waiting for characters...\n";
-   ciaaPOSIX_write(fd_uartfootp, message, ciaaPOSIX_strlen(message));
+   ciaaPOSIX_write(fd_uart, message, ciaaPOSIX_strlen(message));
 
    /* 
       BLINKING!
