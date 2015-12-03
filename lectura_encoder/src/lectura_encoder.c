@@ -6,7 +6,7 @@
 #include "lectura_encoder.h"  /* <= own header */
 
 /* Error de lectura del encoder */
-#define ENC_ERROR 2
+#define ENC_ERROR 0
 
 /* Configurar un pin de GPIO como entrada */
 void configurar_entrada(uint8_t pinNamePort,uint8_t pinNamePin,uint8_t func,uint8_t gpioPort,uint8_t gpioPin);
@@ -33,7 +33,7 @@ static int32_t fd_out;
 static int32_t fd_uart;
 
 int pulsos = 0;
-double vueltas;
+double vueltas = 0;
 
 int previo = 0, actual = 0, inc;
 
@@ -87,7 +87,7 @@ TASK(InitTask)
    ciaaPOSIX_ioctl(fd_uart, ciaaPOSIX_IOCTL_SET_FIFO_TRIGGER_LEVEL, (void *)ciaaFIFO_TRIGGER_LEVEL3);
 
    /* activate periodic task */
-   SetRelAlarm(ActivatePeriodicTask, 0, 100);
+   SetRelAlarm(ActivatePeriodicTask, 0, 1000);
 
    /* terminate task */
    TerminateTask();
@@ -104,11 +104,15 @@ TASK(PeriodicTask) {
 
    int incremento = encoder(encoder_in);
    pulsos += incremento;
+   int aux = pulsos;
 
    vueltas = pulsos / 32;
 
    uint8_t data = (uint8_t) pulsos;
-   send_uart((uint8_t) incremento);
+   //uint8_t data2 = (uint8_t) vueltas;
+   //send_uart((uint8_t) incremento);
+   send_uart(data);
+   //send_uart(data2);
 
    /* terminate task */
    TerminateTask();
@@ -184,6 +188,6 @@ void leer_entradas_encoder(uint8_t *entrada_1, uint8_t *entrada_2) {
  * Obtiene un valor de la matriz segun las entradas
  */
 uint8_t obtener_valor_matriz(uint8_t entrada_1, uint8_t entrada_2) {
-  static uint8_t M_gray[2][2] = {{0,1},{2,3}};
+  static uint8_t M_gray[2][2] = {{0,2},{1,3}};
   return M_gray[entrada_1][entrada_2];
 }

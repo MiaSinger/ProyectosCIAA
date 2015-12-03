@@ -163,7 +163,7 @@ TASK(InitTask)
     *  - for the first time after 350 ticks (350 ms)
     *  - and then every 250 ticks (250 ms)
     */
-   SetRelAlarm(ActivatePeriodicTask, 0, 500);
+   SetRelAlarm(ActivatePeriodicTask, 0, 1000);
 
    /* terminate task */
    TerminateTask();
