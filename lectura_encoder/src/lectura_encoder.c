@@ -32,8 +32,10 @@ static int32_t fd_out;
 /* File descriptor para la UART USB */
 static int32_t fd_uart;
 
-int pulsos;
+int pulsos = 0;
 double vueltas;
+
+int previo = 0, actual = 0, inc;
 
 int main(void)
 {
@@ -85,7 +87,7 @@ TASK(InitTask)
    ciaaPOSIX_ioctl(fd_uart, ciaaPOSIX_IOCTL_SET_FIFO_TRIGGER_LEVEL, (void *)ciaaFIFO_TRIGGER_LEVEL3);
 
    /* activate periodic task */
-   SetRelAlarm(ActivatePeriodicTask, 0, 500);
+   SetRelAlarm(ActivatePeriodicTask, 0, 100);
 
    /* terminate task */
    TerminateTask();
@@ -106,7 +108,7 @@ TASK(PeriodicTask) {
    vueltas = pulsos / 32;
 
    uint8_t data = (uint8_t) pulsos;
-   send_uart(data);
+   send_uart((uint8_t) incremento);
 
    /* terminate task */
    TerminateTask();
@@ -158,8 +160,6 @@ int encoder(uint8_t encoder_in) {
                             {1,       ENC_ERROR, 0,        -1        },
                             {ENC_ERROR,-1,       1,         0         }
   };
-
-  static int previo = 0, actual = 0, inc;
 
   // Actualizacion
   previo = actual;
