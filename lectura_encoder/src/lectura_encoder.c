@@ -32,8 +32,8 @@ static int32_t fd_out;
 /* File descriptor para la UART USB */
 static int32_t fd_uart;
 
-int pulsos = 0;
-double vueltas = 0;
+int16_t pulsos = 0;
+int16_t vueltas = 0;
 
 int previo = 0, actual = 0, inc;
 
@@ -103,10 +103,26 @@ TASK(PeriodicTask) {
    uint8_t encoder_in = obtener_valor_matriz(entrada_1, entrada_2);
 
    int incremento = encoder(encoder_in);
-   pulsos += incremento;
-   int aux = pulsos;
 
-   vueltas = pulsos / 32;
+   if(incremento!=0){
+     if(incremento>0){
+        if(pulsos==32){
+          vueltas++;
+          pulsos = 0;
+        }
+        else pulsos++;
+     }
+     else{
+        if(pulsos==0){
+          pulsos=32;
+          vueltas--;
+        }
+        else pulsos--;
+     }
+   }
+   //pulsos += incremento;
+
+   //vueltas = pulsos / 32;
 
    uint8_t data = (uint8_t) pulsos;
    //uint8_t data2 = (uint8_t) vueltas;
