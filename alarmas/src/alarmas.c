@@ -74,6 +74,8 @@
 #include "alarmas.h"         /* <= own header */
 
 int count = 0;
+int speed = 0;
+int velocidades[4] = {100, 250, 500, 1000};
 
 /*==================[macros and definitions]=================================*/
 
@@ -82,12 +84,6 @@ int count = 0;
 /*==================[internal functions declaration]=========================*/
 
 /*==================[internal data definition]===============================*/
-
-/** \brief File descriptor for digital output ports
- *
- * Device path /dev/dio/out/0
- */
-static int32_t fd_out;
 
 /*==================[external data definition]===============================*/
 
@@ -151,14 +147,11 @@ TASK(InitTask)
    /* print message (only on x86) */
    ciaaPOSIX_printf("Init Task...\n");
 
-   /* open CIAA digital outputs */
-   fd_out = ciaaPOSIX_open("/dev/dio/out/0", ciaaPOSIX_O_RDWR);
-
    /* activate periodic task:
     *  - for the first time after 350 ticks (350 ms)
     *  - and then every 250 ticks (250 ms)
     */
-   SetRelAlarm(ActivatePeriodicTask, 350, 100);
+   SetRelAlarm(ActivatePeriodicTask, 0, velocidades[0]);
 
    /* terminate task */
    TerminateTask();
@@ -173,29 +166,16 @@ TASK(InitTask)
 TASK(PeriodicTask)
 {
    /* write blinking message */
-   ciaaPOSIX_printf("Blinking Fast: %d\n", count);
+   ciaaPOSIX_printf("Blinking: %d - Speed: %d\n", count, velocidades[speed]);
 
    if(++count == 10) {
-     ciaaPOSIX_printf("----------------\n");
+     ciaaPOSIX_printf("------------------------\n");
      count = 0;
+
+     speed = (speed + 1) % 4;
+
      CancelAlarm(ActivatePeriodicTask);
-     SetRelAlarm(ActivatePeriodicTaskSlow, 350, 500);
-   }
-
-   /* terminate task */
-   TerminateTask();
-}
-
-TASK(PeriodicTaskSlow)
-{
-   /* write blinking message */
-   ciaaPOSIX_printf("Blinking Slow: %d\n", count);
-
-   if(++count == 10) {
-     ciaaPOSIX_printf("----------------\n");
-     count = 0;
-     CancelAlarm(ActivatePeriodicTaskSlow);
-     SetRelAlarm(ActivatePeriodicTask, 350, 100);
+     SetRelAlarm(ActivatePeriodicTask, 0, velocidades[speed]);
    }
 
    /* terminate task */

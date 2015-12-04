@@ -98,21 +98,4 @@ OSEK OSEK {
       COUNTER = HWCOUNTER0;
    };
 
-   TASK PeriodicTaskSlow {
-      PRIORITY = 2;
-      ACTIVATION = 1;
-      STACK = 512;
-      TYPE = EXTENDED;
-      SCHEDULE = NON;
-      RESOURCE = POSIXR;
-      EVENT = POSIXE;
-   }
-
-   ALARM ActivatePeriodicTaskSlow {
-      COUNTER = HardwareCounter;
-      ACTION = ACTIVATETASK {
-         TASK = PeriodicTaskSlow;
-      }
-   }
-
 };

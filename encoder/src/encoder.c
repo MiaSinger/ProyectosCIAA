@@ -179,26 +179,26 @@ TASK(PeriodicTask)
 {
    //Leer el estado, y cambiarlo
    uint8_t gpioPort;
-   uint8_t gpioPin; 
+   uint8_t gpioPin;
 
    if(value == 0) {
      gpioPort = 2;
-     gpioPin = 8; 
+     gpioPin = 8;
      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
      value = 1;
    } else if (value == 1) {
      gpioPort = 3;
-     gpioPin = 7; 
+     gpioPin = 7;
      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
      value = 2;
    } else if (value == 2) {
      gpioPort = 2;
-     gpioPin = 8; 
+     gpioPin = 8;
      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
      value = 3;
    } else if (value == 3) {
      gpioPort = 3;
-     gpioPin = 7; 
+     gpioPin = 7;
      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
      value = 0;
    }
@@ -219,12 +219,12 @@ void configurar_salida(uint8_t pinNamePort,uint8_t pinNamePin,uint8_t func,uint8
      uint8_t OUTPUT = 1;
 
      Chip_GPIO_SetDir(LPC_GPIO_PORT, gpioPort, ( 1 << gpioPin ), OUTPUT);
-     
+
      //Inicializo en 0
      uint8_t init = 0;
 
      Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, init);
-} 
+}
 
 /** @} doxygen end group definition */
 /** @} doxygen end group definition */
