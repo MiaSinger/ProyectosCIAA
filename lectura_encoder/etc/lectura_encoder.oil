@@ -89,7 +89,24 @@ OSEK OSEK {
          TASK = PeriodicTask;
       }
    }
-   
+
+   TASK PeriodicTaskUart {
+      PRIORITY = 2;
+      ACTIVATION = 1;
+      STACK = 512;
+      TYPE = EXTENDED;
+      SCHEDULE = NON;
+      RESOURCE = POSIXR;
+      EVENT = POSIXE;
+   }
+
+   ALARM ActivatePeriodicTaskUart {
+      COUNTER = HardwareCounter;
+      ACTION = ACTIVATETASK {
+         TASK = PeriodicTaskUart;
+      }
+   }
+
    COUNTER HardwareCounter {
       MAXALLOWEDVALUE = 1000;
       TICKSPERBASE = 1;

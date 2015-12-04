@@ -24,7 +24,7 @@ int encoder(uint8_t encoder_in);
 uint8_t obtener_valor_matriz(uint8_t entrada_1, uint8_t entrada_2);
 
 /* Enviar dato por UART */
-void send_uart(uint8_t data);
+void send_uart(uint8_t data_1, uint8_t data_2);
 
 /* File descriptor para las salidas digitales (onboard leds) */
 static int32_t fd_out;
@@ -87,7 +87,8 @@ TASK(InitTask)
    ciaaPOSIX_ioctl(fd_uart, ciaaPOSIX_IOCTL_SET_FIFO_TRIGGER_LEVEL, (void *)ciaaFIFO_TRIGGER_LEVEL3);
 
    /* activate periodic task */
-   SetRelAlarm(ActivatePeriodicTask, 0, 1000);
+   SetRelAlarm(ActivatePeriodicTask, 0, 100);
+   SetRelAlarm(ActivatePeriodicTaskUart, 0, 250);
 
    /* terminate task */
    TerminateTask();
@@ -127,12 +128,24 @@ TASK(PeriodicTask) {
    uint8_t data = (uint8_t) pulsos;
    //uint8_t data2 = (uint8_t) vueltas;
    //send_uart((uint8_t) incremento);
-   send_uart(data);
+   //send_uart(data);
    //send_uart(data2);
 
    /* terminate task */
    TerminateTask();
 }
+
+/*
+ * Periodic Task UART
+ */
+TASK(PeriodicTaskUart) {
+   /* Envio cantidad de pulsos y vueltas */
+   send_uart(pulsos, vueltas);
+
+   /* terminate task */
+   TerminateTask();
+}
+
 
 /*
  * Configurar Entrada
@@ -154,12 +167,13 @@ void configurar_entrada(uint8_t pinNamePort,uint8_t pinNamePin,uint8_t func,uint
 /*
  * Enviar dato por UART
  */
- void send_uart(uint8_t data) {
+ void send_uart(uint8_t data_1, uint8_t data_2) {
    /* buf = buffer para UART */
-   int8_t buf[0];
-   buf[0] = data;
+   int8_t buf[2];
+   buf[0] = data_1;
+   buf[1] = data_2;
 
-   ciaaPOSIX_write(fd_uart, buf, 1);
+   ciaaPOSIX_write(fd_uart, buf, 2);
  }
 
 /*
