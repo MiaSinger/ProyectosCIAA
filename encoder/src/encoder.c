@@ -78,7 +78,15 @@
 #include "encoder.h"          /* <= own header */
 
 static int32_t fd_out;
+static int32_t fd_in;
+
 uint8_t value = 0;
+
+int speed = 0;
+int sentido = 0;
+int velocidades[5] = {100, 250, 500, 750, 1000};
+
+int stop = 0;
 
 /*==================[macros and definitions]=================================*/
 
@@ -153,6 +161,7 @@ TASK(InitTask)
    ciaaPOSIX_printf("Init Task...\n");
 
    fd_out = ciaaPOSIX_open("/dev/dio/out/0", ciaaPOSIX_O_RDWR);
+   fd_in = ciaaPOSIX_open("/dev/dio/in/0", ciaaPOSIX_O_RDONLY);
 
    //GPIO8
    configurar_salida(6,12,FUNC0,2,8);
@@ -163,7 +172,8 @@ TASK(InitTask)
     *  - for the first time after 350 ticks (350 ms)
     *  - and then every 250 ticks (250 ms)
     */
-   SetRelAlarm(ActivatePeriodicTask, 0, 1000);
+   SetRelAlarm(ActivatePeriodicTask, 0, velocidades[speed]);
+   SetRelAlarm(ActivatePeriodicTaskTeclas, 0, 150);
 
    /* terminate task */
    TerminateTask();
@@ -180,31 +190,128 @@ TASK(PeriodicTask)
    //Leer el estado, y cambiarlo
    uint8_t gpioPort;
    uint8_t gpioPin;
+   uint8_t pinValue;
 
-   if(value == 0) {
-     gpioPort = 2;
-     gpioPin = 8;
-     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
-     value = 1;
-   } else if (value == 1) {
-     gpioPort = 3;
-     gpioPin = 7;
-     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
-     value = 2;
-   } else if (value == 2) {
-     gpioPort = 2;
-     gpioPin = 8;
-     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
-     value = 3;
-   } else if (value == 3) {
-     gpioPort = 3;
-     gpioPin = 7;
-     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
-     value = 0;
+   if(stop) {
+
+   } else {
+     if(sentido == 0) {
+       if(value == 0) {
+          gpioPort = 2;
+          gpioPin = 8;
+          Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+          value = 1;
+        } else if (value == 1) {
+          gpioPort = 3;
+          gpioPin = 7;
+          Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+          value = 2;
+        } else if (value == 2) {
+          gpioPort = 2;
+          gpioPin = 8;
+          Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+          value = 3;
+        } else if (value == 3) {
+          gpioPort = 3;
+          gpioPin = 7;
+          Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+          value = 0;
+        }
+      } else {
+        if(value == 0) {
+           gpioPort = 3;
+           gpioPin = 7;
+           Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+           value = 1;
+         } else if (value == 1) {
+           gpioPort = 2;
+           gpioPin = 8;
+           Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 1);
+           value = 2;
+         } else if (value == 2) {
+           gpioPort = 3;
+           gpioPin = 7;
+           Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+           value = 3;
+         } else if (value == 3) {
+           gpioPort = 2;
+           gpioPin = 8;
+           Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, 0);
+           value = 0;
+         }
+      }
+    }
+
+/*
+      count++;
+
+      if(count == 16) {
+        count = 0;
+
+        if(sentido == 0) {
+          sentido = 1;
+        } else {
+          sentido = 0;
+        }
+      }*/
+
+/*
+   if(sentido == 0) {
+     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, pinValue);
+     sentido = 1;
+   } else {
+     Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpioPort, gpioPin, );
+     sentido = 0;
    }
+
+   if(++count == 10) {
+     count = 0;
+
+     speed = (speed + 1) % 5;
+
+     CancelAlarm(ActivatePeriodicTask);
+     SetRelAlarm(ActivatePeriodicTask, 0, velocidades[speed]);
+   }
+*/
 
    /* terminate task */
    TerminateTask();
+}
+
+TASK(PeriodicTaskTeclas)
+{
+  uint8_t inputs;
+
+  ciaaPOSIX_read(fd_in, &inputs, 1);
+  if(inputs == 0b1110) {
+    if(stop == 1) stop = 0;
+    else stop = 1;
+  } else if (inputs == 0b1101) {
+    if(sentido == 1) sentido = 0;
+    else sentido = 1;
+  } else if (inputs == 0b1011) {
+    if(speed == 4) {
+      //Nada
+    } else {
+      speed++;
+
+      CancelAlarm(ActivatePeriodicTask);
+      SetRelAlarm(ActivatePeriodicTask, 0, velocidades[speed]);
+    }
+  } else if (inputs == 0b0111) {
+    if(speed == 0) {
+      //Nada
+    } else {
+      speed--;
+
+      CancelAlarm(ActivatePeriodicTask);
+      SetRelAlarm(ActivatePeriodicTask, 0, velocidades[speed]);
+    }
+  }
+
+
+  /* terminate task */
+  TerminateTask();
 }
 
 void configurar_salida(uint8_t pinNamePort,uint8_t pinNamePin,uint8_t func,uint8_t gpioPort,uint8_t gpioPin) {

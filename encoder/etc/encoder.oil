@@ -89,13 +89,30 @@ OSEK OSEK {
          TASK = PeriodicTask;
       }
    }
-   
+
    COUNTER HardwareCounter {
       MAXALLOWEDVALUE = 1000;
       TICKSPERBASE = 1;
       MINCYCLE = 1;
       TYPE = HARDWARE;
-      COUNTER = HWCOUNTER0;
+      COUNTER = HWCOUNTER1;
    };
+
+   TASK PeriodicTaskTeclas {
+      PRIORITY = 2;
+      ACTIVATION = 1;
+      STACK = 512;
+      TYPE = EXTENDED;
+      SCHEDULE = NON;
+      RESOURCE = POSIXR;
+      EVENT = POSIXE;
+   }
+
+   ALARM ActivatePeriodicTaskTeclas {
+      COUNTER = HardwareCounter;
+      ACTION = ACTIVATETASK {
+         TASK = PeriodicTaskTeclas;
+      }
+   }
 
 };
