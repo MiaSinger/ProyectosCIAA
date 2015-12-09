@@ -118,7 +118,8 @@ static int32_t fd_out;
 static int32_t fd_uart1;
 
 uint8_t pulsos = 0;
-int16_t vueltas = 0;
+uint8_t vueltas_signo = 0;
+uint8_t vueltas = 0;
 
 int previo = 0, actual = 0, inc;
 
@@ -231,15 +232,35 @@ TASK(PeriodicTask)
   if(incremento!=0){
     if(incremento>0){
        if(pulsos==32){
-         vueltas++;
          pulsos = 0;
+
+         if(vueltas_signo == 0) {
+            vueltas++;
+         } else {
+            if(vueltas == 1) {
+              vueltas_signo = 0;
+              vueltas = 0;
+            } else {
+              vueltas--;
+            } 
+         }
        }
        else pulsos++;
     }
     else{
        if(pulsos==0){
          pulsos=32;
-         vueltas--;
+
+        if(vueltas_signo == 0) {
+          if(vueltas == 0) {
+            vueltas_signo = 1;
+            vueltas = 1;
+          } else {
+            vueltas--;
+          }
+        } else {
+            vueltas++;
+        }
        }
        else pulsos--;
     }
