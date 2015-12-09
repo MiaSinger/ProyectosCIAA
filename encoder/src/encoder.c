@@ -84,9 +84,9 @@ uint8_t value = 0;
 
 int speed = 0;
 int sentido = 0;
-int velocidades[5] = {100, 250, 500, 750, 1000};
+int velocidades[5] = {200, 400, 600, 800, 1000};
 
-int stop = 0;
+int stop = 0, tocando = 0, tocando1 = 0, tocando2 = 0, tocando3 = 0;
 
 /*==================[macros and definitions]=================================*/
 
@@ -283,30 +283,53 @@ TASK(PeriodicTaskTeclas)
   uint8_t inputs;
 
   ciaaPOSIX_read(fd_in, &inputs, 1);
-  if(inputs == 0b1110) {
-    if(stop == 1) stop = 0;
-    else stop = 1;
-  } else if (inputs == 0b1101) {
-    if(sentido == 1) sentido = 0;
-    else sentido = 1;
-  } else if (inputs == 0b1011) {
-    if(speed == 4) {
-      //Nada
-    } else {
-      speed++;
-
-      CancelAlarm(ActivatePeriodicTask);
-      SetRelAlarm(ActivatePeriodicTask, 0, velocidades[speed]);
-    }
-  } else if (inputs == 0b0111) {
-    if(speed == 0) {
-      //Nada
-    } else {
-      speed--;
-
-      CancelAlarm(ActivatePeriodicTask);
-      SetRelAlarm(ActivatePeriodicTask, 0, velocidades[speed]);
-    }
+  if(inputs == 0b1) { //Boton de Stop [TEC1]
+    tocando = 1;    
+  } else
+  {
+     if(tocando == 1)
+     {
+      if(stop == 1) stop = 0;
+      else stop = 1;
+      tocando = 0;
+     } 
+  } 
+  if (inputs == 0b10) { //Boton del sentido [TEC2]
+     tocando1 = 1;
+  } else{
+     if(tocando1 == 1){
+       if(sentido == 1) sentido = 0;
+       else sentido = 1;
+       tocando1 = 0;
+     }
+  }     
+  if (inputs == 0b100) { //Boton de disminucion de velocidad [TEC3]
+     tocando2 = 1;
+  } else{
+      if(tocando2 == 1){
+        if(speed == 4) {
+        //Nada
+        } else {
+            speed++;
+            CancelAlarm(ActivatePeriodicTask);
+            SetRelAlarm(ActivatePeriodicTask, 0, velocidades[speed]);
+          }
+        tocando2 = 0;
+      }
+  }
+  if (inputs == 0b1000) { //Boton de aumento de velocidad [TEC4]
+    tocando3 = 1;
+  } else{
+      if(tocando3 == 1){
+        if(speed == 0) {
+        //Nada
+        } else {
+            speed--;
+            CancelAlarm(ActivatePeriodicTask);
+            SetRelAlarm(ActivatePeriodicTask, 0, velocidades[speed]);
+          }
+        tocando3 = 0;
+       }
   }
 
 
