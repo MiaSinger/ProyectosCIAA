@@ -4,7 +4,7 @@ import serial
 import time
 import os
 
-uart = serial.Serial("/dev/ttyUSB1", 115200)
+uart = serial.Serial("/dev/ttyUSB2", 115200)
 
 while True:
 	os.system("clear")
@@ -14,11 +14,18 @@ while True:
 	pulsos = int.from_bytes(result1, byteorder="big")
 	result2 = uart.read(1)
 	vueltas = int.from_bytes(result2, byteorder="big")
+	result3 = uart.read(1)
+	signo = int.from_bytes(result3, byteorder="big")
+	
+	if signo == 1:
+		signo = "-"
+	else:
+		signo = ""
 
 	print("Datos obtenidos del encoder:")
 	print("----------------------------\n")
 	table = PrettyTable(["Pulsos", "Vueltas"])
-	table.add_row([pulsos, vueltas])
+	table.add_row([pulsos, signo + str(vueltas)])
 	print(table)
 
 	time.sleep(0.250)

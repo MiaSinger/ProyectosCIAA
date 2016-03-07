@@ -283,8 +283,8 @@ TASK(PeriodicTaskTeclas)
   uint8_t inputs;
 
   ciaaPOSIX_read(fd_in, &inputs, 1);
-  if(inputs == 0b1) { //Boton de Stop [TEC1]
-    tocando = 1;    
+  if(inputs == 0b1110) { //Boton de Stop [TEC1]
+    tocando = 1;
   } else
   {
      if(tocando == 1)
@@ -292,9 +292,9 @@ TASK(PeriodicTaskTeclas)
       if(stop == 1) stop = 0;
       else stop = 1;
       tocando = 0;
-     } 
-  } 
-  if (inputs == 0b10) { //Boton del sentido [TEC2]
+     }
+  }
+  if (inputs == 0b1101) { //Boton del sentido [TEC2]
      tocando1 = 1;
   } else{
      if(tocando1 == 1){
@@ -302,8 +302,8 @@ TASK(PeriodicTaskTeclas)
        else sentido = 1;
        tocando1 = 0;
      }
-  }     
-  if (inputs == 0b100) { //Boton de disminucion de velocidad [TEC3]
+  }
+  if (inputs == 0b1011) { //Boton de disminucion de velocidad [TEC3]
      tocando2 = 1;
   } else{
       if(tocando2 == 1){
@@ -317,7 +317,7 @@ TASK(PeriodicTaskTeclas)
         tocando2 = 0;
       }
   }
-  if (inputs == 0b1000) { //Boton de aumento de velocidad [TEC4]
+  if (inputs == 0b0111) { //Boton de aumento de velocidad [TEC4]
     tocando3 = 1;
   } else{
       if(tocando3 == 1){

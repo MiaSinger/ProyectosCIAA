@@ -119,6 +119,7 @@ static int32_t fd_uart1;
 
 uint8_t pulsos = 0;
 uint8_t vueltas_signo = 0;
+uint8_t signo = 0; // 0 vueltas positivas, 1 vueltas negativas (al lado contrario)
 uint8_t vueltas = 0;
 
 int previo = 0, actual = 0, inc;
@@ -240,14 +241,14 @@ TASK(PeriodicTask)
             if(vueltas == 1) {
               vueltas_signo = 0;
               vueltas = 0;
+              signo = 0;
             } else {
               vueltas--;
-            } 
+            }
          }
        }
        else pulsos++;
-    }
-    else{
+    } else {
        if(pulsos==0){
          pulsos=32;
 
@@ -255,6 +256,7 @@ TASK(PeriodicTask)
           if(vueltas == 0) {
             vueltas_signo = 1;
             vueltas = 1;
+            signo = 1;
           } else {
             vueltas--;
           }
@@ -320,22 +322,15 @@ TASK(SerialEchoTask)
       if(ret > 0)
       {
 
-        if(buf[0] == 112) { // If "p" sends pulsos
+        if(buf[0] == 112) { // If "p" sends pulsos vueltas y signo de vueltas
           buf[0] = pulsos;
           buf[1] = vueltas;
+          buf[2] = signo;
 
           /* ... and write them to the same device */
-          ciaaPOSIX_write(fd_uart1, buf, 2);
-        } else if(buf[0] == 118) { //if "v" sends vueltas
-          buf[0] = 4;
-          buf[1] = 5;
-
-          /* ... and write them to the same device */
-          ciaaPOSIX_write(fd_uart1, buf, 2);
+          ciaaPOSIX_write(fd_uart1, buf, 3);
         }
-
       }
-
    }
 }
 
